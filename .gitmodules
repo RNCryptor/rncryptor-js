@@ -1,0 +1,6 @@
+[submodule "RNCryptor-Spec"]
+	path = RNCryptor-Spec
+	url = git@github.com:RNCryptor/RNCryptor-Spec.git
+[submodule "Spec"]
+	path = Spec
+	url = git@github.com:RNCryptor/RNCryptor-Spec.git
