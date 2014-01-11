@@ -12,4 +12,13 @@ var verify_password_short = function(vector) {
                                      });
 
   equal(ciphertext.toString(), vector["ciphertext_hex"].replace(/\s/g,''));
+
+  var plaintext = RNCryptor.Decrypt(vector["password"],
+                                    CryptoJS.enc.Hex.parse(vector["ciphertext_hex"].replace(/\s/g,'')), 
+                                     { "encryption_salt": CryptoJS.enc.Hex.parse(vector["enc_salt_hex"].replace(/\s/g,'')),
+                                       "hmac_salt": CryptoJS.enc.Hex.parse(vector["hmac_salt_hex"].replace(/\s/g,'')),
+                                       "iv": CryptoJS.enc.Hex.parse(vector["iv_hex"].replace(/\s/g,''))
+                                     });
+
+    equal(plaintext.toString(), vector["plaintext_hex"].replace(/\s/g,''));
 }
