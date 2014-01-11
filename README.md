@@ -1,7 +1,7 @@
 rncryptor-js
 ============
 
-(In Progress) JavaScript implementation of RNCryptor.
+(In Progress) JavaScript implementation of [RNCryptor](https://github.com/RNCryptor/RNCryptor).
 
 THIS IS NOT A REAL, WORKING PRODUCT YET. (It does currently read and write modified RNCryptor files, however.)
 
