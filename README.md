@@ -10,3 +10,6 @@ Currently uses a hard-coded 1000 PBKDF2 iterations, which makes its file format 
 I don't know yet if 1000 rounds is fast enough. I may still make changes to the format that rncryptor-js uses. You have been warned. This is pre-alpha software. It passes the test vectors, though.
 
 BTW: This project would love an owner. I hate JavaScript. But I love secure systems. There is too much JavaScript out there not to provide an easy-to-use crypto framework that interoperates well with other platforms. So I started working on it. But if you're good a JavaScript and would like to work on this, I can talk you through the crypto. As you can see from this implementation, the code isn't actually very complicated since it relies on CryptoJS for the all the heavy lifting.
+
+SJCL (1.0.0) config:
+./configure --without-all --with-aes --with-bitArray --with-codecHex --with-sha256 --with-sha1 --with-hmac --with-pbkdf2 --with-random --with-convenience --with-cbc

@@ -90,8 +90,5 @@ RNCryptor.Decrypt = function(password, message, options) {
   sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
   var decrypted = sjcl.mode[p.mode].decrypt(aes, ciphertext, p.iv);
 
-
-
-
   return decrypted;
 }
