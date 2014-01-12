@@ -1,130 +1,97 @@
 var RNCryptor = {};
 
-CryptoJS.enc.u8array = {
-        /**
-         * Converts a word array to a Uint8Array.
-         *
-         * @param {WordArray} wordArray The word array.
-         *
-         * @return {Uint8Array} The Uint8Array.
-         *
-         * @static
-         *
-         * @example
-         *
-         *     var u8arr = CryptoJS.enc.u8array.stringify(wordArray);
-         */
-        stringify: function (wordArray) {
-            // Shortcuts
-            var words = wordArray.words;
-            var sigBytes = wordArray.sigBytes;
-
-            // Convert
-            var u8 = new Uint8Array(sigBytes);
-            for (var i = 0; i < sigBytes; i++) {
-                var byte = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
-                u8[i]=byte;
-            }
-
-            return u8;
-        },
-
-        /**
-         * Converts a Uint8Array to a word array.
-         *
-         * @param {string} u8Str The Uint8Array.
-         *
-         * @return {WordArray} The word array.
-         *
-         * @static
-         *
-         * @example
-         *
-         *     var wordArray = CryptoJS.enc.u8array.parse(u8arr);
-         */
-        parse: function (u8arr) {
-            // Shortcut
-            var len = u8arr.length;
-
-            // Convert
-            var words = [];
-            for (var i = 0; i < len; i++) {
-                words[i >>> 2] |= (u8arr[i] & 0xff) << (24 - (i % 4) * 8);
-            }
-
-            return CryptoJS.lib.WordArray.create(words, len);
-        }
-    };
-
 /*
     Takes password string and salt WordArray
-    Returns key WordArray
+    Returns key bitArray
 */
+
 RNCryptor.KeyForPassword = function(password, salt) {
-    return CryptoJS.PBKDF2(password, salt, { keySize: 256/32, iterations: 1000 });
+  var hmacSHA1 = function (key) {
+      var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1);
+      this.encrypt = function () {
+          return hasher.encrypt.apply(hasher, arguments);
+      };
+  };
+  return sjcl.misc.pbkdf2(password, salt, 1000, 32 * 8, hmacSHA1);
 }
 
 /*
-  Takes password string and plaintext WordArray
+  Takes password string and plaintext bitArray
   options:
     iv
     encryption_salt
     html_salt
-  Returns ciphertext WordArray
+  Returns ciphertext bitArray
 */
 RNCryptor.Encrypt = function(password, plaintext, options) {
   options = options || {}
-  var encryption_salt = options["encryption_salt"] || CryptoJS.lib.WordArray.random(64/8);
+  var encryption_salt = options["encryption_salt"] || sjcl.random.randomWords(8 / 4); // FIXME: Need to seed PRNG
   var encryption_key = RNCryptor.KeyForPassword(password, encryption_salt);
 
-  var hmac_salt = options["hmac_salt"] || CryptoJS.lib.WordArray.random(64/8)
+  var hmac_salt = options["hmac_salt"] || sjcl.random.randomWords(8 / 4);
   var hmac_key = RNCryptor.KeyForPassword(password, hmac_salt);
 
-  var iv = options["iv"] || CryptoJS.lib.WordArray.random(64/8)
+  var iv = options["iv"] || sjcl.random.randomWords(16 / 4);
 
-  var version = CryptoJS.enc.Hex.parse("03");
-  var options = CryptoJS.enc.Hex.parse("01");
+  var version = sjcl.codec.hex.toBits("03");
+  var options = sjcl.codec.hex.toBits("01");
   
-  var message = version.clone();
-  message.concat(options);
-  message.concat(encryption_salt);
-  message.concat(hmac_salt);
-  message.concat(iv);
+  var message = sjcl.bitArray.concat(version, options);
+  message = sjcl.bitArray.concat(message, encryption_salt);
+  message = sjcl.bitArray.concat(message, hmac_salt);
+  message = sjcl.bitArray.concat(message, iv);
 
-  var encrypted = CryptoJS.AES.encrypt(plaintext, encryption_key, {iv: iv});
-  message.concat(encrypted.ciphertext);
+  var p = sjcl.json.defaults; 
+  p.iv = iv;
+  p.mode = "cbc";
+  var aes = new sjcl.cipher.aes(encryption_key);
+  sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
+  var encrypted = sjcl.mode[p.mode].encrypt(aes, plaintext, p.iv);
 
-  var hmac = CryptoJS.HmacSHA256(message, hmac_key);
+  message = sjcl.bitArray.concat(message, encrypted);
 
-  message.concat(hmac);
+  var hmac = new sjcl.misc.hmac(hmac_key).encrypt(message);
+  message = sjcl.bitArray.concat(message, hmac);
 
   return message;
 }
 
-RNCryptor.Decrypt = function(password, ciphertext, options) {
+RNCryptor.Decrypt = function(password, message, options) {
   options = options || {}
 
-  var message = ciphertext.toString(CryptoJS.enc.u8array);
+  var version = sjcl.bitArray.extract(message, 0 * 8, 8);
+  var options = sjcl.bitArray.extract(message, 1 * 8, 8);
 
-  var version = message[0];
-  var options = message[1];
-
-  var encryption_salt = CryptoJS.enc.u8array.parse(message.subarray(2, 10));
+  var encryption_salt = sjcl.bitArray.bitSlice(message, 2 * 8, 10 * 8);
   var encryption_key = RNCryptor.KeyForPassword(password, encryption_salt);
 
-  var hmac_salt = CryptoJS.enc.u8array.parse(message.subarray(10, 18));
+  var hmac_salt = sjcl.bitArray.bitSlice(message, 10 * 8, 18 * 8);
   var hmac_key = RNCryptor.KeyForPassword(password, hmac_salt);
 
-  var iv = CryptoJS.enc.u8array.parse(message.subarray(18, 34));
+  var iv = sjcl.bitArray.bitSlice(message, 18 * 8, 34 * 8);
 
-  var ciphertext = CryptoJS.enc.u8array.parse(message.subarray(34, -32));
+  var ciphertext_end = sjcl.bitArray.bitLength(message) - (32 * 8);
 
-  var hmac = CryptoJS.enc.u8array.parse(message.subarray(-32));
+  var ciphertext = sjcl.bitArray.bitSlice(message, 34 * 8, ciphertext_end);
 
-  // Docs say you can pass a WordArray, but it actually has to be Base64.
-  var decrypted = CryptoJS.AES.decrypt(ciphertext.toString(CryptoJS.enc.Base64), encryption_key, {iv: iv});
+  var hmac = sjcl.bitArray.bitSlice(message, ciphertext_end);
 
-  // FIXME: Check HMAC
+  var expected_hmac = new sjcl.misc.hmac(hmac_key).encrypt(sjcl.bitArray.bitSlice(message, 0, ciphertext_end));
+
+  // .equal is of consistent time
+  if (! sjcl.bitArray.equal(hmac, expected_hmac)) {
+    throw new sjcl.exception.corrupt("HMAC mismatch or bad password.");
+  }
+
+  var p = sjcl.json.defaults; 
+  p.iv = iv;
+  p.mode = "cbc";
+  var aes = new sjcl.cipher.aes(encryption_key);
+  sjcl.beware["CBC mode is dangerous because it doesn't protect message integrity."]();
+  var decrypted = sjcl.mode[p.mode].decrypt(aes, ciphertext, p.iv);
+
+
+
 
   return decrypted;
 }
