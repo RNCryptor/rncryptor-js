@@ -3,7 +3,7 @@ rncryptor-js
 
 Rough JavaScript implementation of [RNCryptor](https://github.com/RNCryptor/RNCryptor).
 
-Currently uses a hard-coded 1000 PBKDF2 iterations, which makes its file format incompatible with the default RNCryptor format. If you want it to work with the ObjC RNCryptor, you can, though, by setting the `rounds` to 1000 in the settings struct, both for the encryption key and the HMAC key.
+It is very possible that this is too slow for you. Please let me know what kinds of performance you're seeing.
 
 You must install sjcl as well as rncryptor-js. Note that plaintext and ciphertext are sjcl.bitArrays, not as strings. It is currently up to you to convert.
 
