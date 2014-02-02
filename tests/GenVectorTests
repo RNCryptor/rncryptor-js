@@ -5,7 +5,7 @@ require 'json'
 
 require File.join(File.dirname(__FILE__), '../Spec/vectors', 'vectorparser')
 
-@test_files = ["kdf_short", "password_short"]
+@test_files = ["kdf", "password"]
 
 @options = {}
 

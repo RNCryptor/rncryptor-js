@@ -12,7 +12,7 @@ RNCryptor.KeyForPassword = function(password, salt) {
           return hasher.encrypt.apply(hasher, arguments);
       };
   };
-  return sjcl.misc.pbkdf2(password, salt, 1000, 32 * 8, hmacSHA1);
+  return sjcl.misc.pbkdf2(password, salt, 10000, 32 * 8, hmacSHA1);
 }
 
 /*

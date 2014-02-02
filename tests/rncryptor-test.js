@@ -1,9 +1,9 @@
-var verify_kdf_short = function(vector) {
+var verify_kdf = function(vector) {
   var key = RNCryptor.KeyForPassword(vector["password"], sjcl.codec.hex.toBits(vector["salt_hex"]));
   equal(sjcl.codec.hex.fromBits(key), vector["key_hex"].replace(/\s/g,''));
 }
 
-var verify_password_short = function(vector) {
+var verify_password = function(vector) {
   var ciphertext = RNCryptor.Encrypt(vector["password"], 
                                      sjcl.codec.hex.toBits(vector["plaintext_hex"].replace(/\s/g,'')), 
                                      { "encryption_salt": sjcl.codec.hex.toBits(vector["enc_salt_hex"].replace(/\s/g,'')),
