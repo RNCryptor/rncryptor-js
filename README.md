@@ -3,11 +3,33 @@ rncryptor-js
 
 Rough JavaScript implementation of [RNCryptor](https://github.com/RNCryptor/RNCryptor).
 
-It is very possible that this is too slow for you. Please let me know what kinds of performance you're seeing.
+[![Build Status](https://travis-ci.org/alexey-sh/rncryptor-js.svg?branch=master)](https://travis-ci.org/alexey-sh/rncryptor-js)
 
-You must install sjcl as well as rncryptor-js. Note that plaintext and ciphertext are sjcl.bitArrays, not as strings. It is currently up to you to convert.
+The encrypted data contains:
 
-BTW: This project would love an owner. I hate JavaScript. But I love secure systems. There is too much JavaScript out there not to provide an easy-to-use crypto framework that interoperates well with other platforms. So I started working on it. But if you're good a JavaScript and would like to work on this, I can talk you through the crypto. As you can see from this implementation, the code isn't actually very complicated since it relies on SJCL for the all the heavy lifting.
+version + options + salt + hmacSalt + iv + cipher + hmac
+
+- version - version of the encryption logic
+- options - never used
+- salt - encryption salt, by which the encryption key is generated
+- hmacSalt - salt by which the hmac key is generated
+- iv - will used in aes
+- cipher - encrypted data, the result of aes encryption
+- hmac - hash(version + options + salt + hmacSalt + iv + cipher), used for checking that data isn't corrupted
+
 
 SJCL (1.0.0) config:
 ./configure --without-all --with-aes --with-bitArray --with-codecHex --with-sha256 --with-sha1 --with-hmac --with-pbkdf2 --with-random --with-convenience --with-cbc
+
+
+Example
+=====
+
+```
+var rnCryptor = new RNCryptor({password: 'test'});
+var encrypted = rnCryptor.encrypt('hello');
+var decrypted = rnCryptor.decrypt(encrypted);
+console.log(encrypted);
+console.log(decrypted);
+```
+
