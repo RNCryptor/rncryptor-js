@@ -3,6 +3,7 @@ rncryptor-js
 
 Rough JavaScript implementation of [RNCryptor](https://github.com/RNCryptor/RNCryptor).
 
+[![Build Status](https://travis-ci.org/alexey-sh/rncryptor-js.svg?branch=master)](https://travis-ci.org/alexey-sh/rncryptor-js)
 
 The encrypted data contains:
 
