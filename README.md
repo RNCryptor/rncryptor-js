@@ -3,39 +3,6 @@ rncryptor-js
 
 Rough JavaScript implementation of [RNCryptor](https://github.com/RNCryptor/RNCryptor).
 
-## Example usage
-
-```javascript
-var settings = {
-    hmac_salt: "FFGE/kyU1TY=",
-    salt: "rfAaaGiNBFM=",
-    password: 'spring'
-};
-
-
-var cryptor = new RNCryptor({
-    HMAC_SALT: RNCryptor.helpers.base64ToHex(settings.hmac_salt),
-    ENCRYPTION_SALT: RNCryptor.helpers.base64ToHex(settings.salt),
-    PASSWORD: settings.password
-});
-
-encrypted_msg = cryptor.encrypt('top secret');
-
-decrypted_msg = cryptor.decrypt(encrypted_msg); // => top secret
-
-```
-
-or you can setup RNCryptor without master password, via keys
-```javascript
-cryptor = new RNCryptor({
-    KEY: '8872312fbc7e985943e079f1836220b55d22da3101c5d8328d17cf6eb4637469',
-    HMAC_KEY: '0871e2b30fa7ff09b329560f0e4729e75611369fedac762c78332d0825cc676c',
-    HMAC_SALT: RNCryptor.helpers.base64ToHex(settings.hmac_salt),
-    ENCRYPTION_SALT: RNCryptor.helpers.base64ToHex(settings.salt)
-});
-
-```
-
 
 The encrypted data contains:
 
