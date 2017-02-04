@@ -1,2 +1,2 @@
 language: node_js
-script: make -C tests
+script: phantomjs tests/runner.js tests/rncryptor-test.html
